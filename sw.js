@@ -4,8 +4,8 @@ const CACHE_NAME = 'pbi-pwa-cache-v1';
 const FILES_TO_CACHE = [
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/icon-192.png',
+  '/icon-512.png'
   // Add more assets: CSS, JS, etc. e.g. '/styles.css', '/app.js'
 ];
 
