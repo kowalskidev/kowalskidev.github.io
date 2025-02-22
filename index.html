@@ -1,26 +1,38 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Power BI Dashboard</title>
+  <meta charset="UTF-8"/>
+  <title>Power BI PWA</title>
+  <!-- Make sure to reference your manifest for PWA installation prompts -->
+  <link rel="manifest" href="manifest.json">
+  <!-- iOS splash screen & icons (optional) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#FFFFFF" />
   <style>
     html, body {
       margin: 0; 
       padding: 0; 
       height: 100%;
-      overflow: hidden;
+      overflow: hidden; /* remove scrollbars if desired */
+      font-family: sans-serif;
+    }
+    #header {
+      background: #0078D4;
+      color: white;
+      padding: 10px;
+      text-align: center;
     }
     #reportContainer {
       position: relative;
       width: 100%;
-      height: 100%;
+      height: calc(100% - 50px); /* Adjust for header height */
     }
     iframe {
       width: 100%;
       height: 100%;
       border: none;
     }
+    /* Fullscreen button (optional) */
     #fullscreenBtn {
       position: absolute;
       top: 10px;
@@ -33,35 +45,54 @@
       cursor: pointer;
       border-radius: 5px;
       font-size: 14px;
+      opacity: 0.8;
+    }
+    #fullscreenBtn:hover {
+      opacity: 1;
     }
   </style>
 </head>
 <body>
+
+  <div id="header">
+    <h1>My Power BI PWA</h1>
+  </div>
+
   <div id="reportContainer">
     <button id="fullscreenBtn">Full Screen</button>
     <iframe 
       id="reportFrame"
-      src="https://app.powerbi.com/reportEmbed?reportId=822af47a-9462-4980-9e2f-78f3beaf3ab8&autoAuth=true&ctid=a89f5d7e-7b67-4127-868b-15eb3ee8a8dc"
+      src="https://app.powerbi.com/reportEmbed?reportId=YOUR_REPORT_ID_HERE"
       allowfullscreen="true"
       webkitallowfullscreen="true"
       mozallowfullscreen="true">
     </iframe>
   </div>
+
   <script>
+    // Fullscreen handler
     const btn = document.getElementById('fullscreenBtn');
     const container = document.getElementById('reportContainer');
-
     btn.addEventListener('click', () => {
       if (container.requestFullscreen) {
         container.requestFullscreen();
-      } else if (container.mozRequestFullScreen) { // Firefox
+      } else if (container.mozRequestFullScreen) {
         container.mozRequestFullScreen();
-      } else if (container.webkitRequestFullscreen) { // Chrome, Safari & Opera
+      } else if (container.webkitRequestFullscreen) {
         container.webkitRequestFullscreen();
-      } else if (container.msRequestFullscreen) { // IE/Edge
+      } else if (container.msRequestFullscreen) {
         container.msRequestFullscreen();
       }
     });
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registered!', reg))
+          .catch(err => console.log('Service Worker registration failed: ', err));
+      });
+    }
   </script>
 </body>
 </html>
