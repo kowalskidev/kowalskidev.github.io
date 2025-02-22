@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Power BI Dashboard</title>
+  <style>
+    html, body {
+      margin: 0; 
+      padding: 0; 
+      height: 100%;
+      overflow: hidden;
+    }
+    #reportContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    #fullscreenBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 999;
+      padding: 10px 15px;
+      background: #0078D4;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="reportContainer">
+    <button id="fullscreenBtn">Full Screen</button>
+    <iframe 
+      id="reportFrame"
+      src="https://app.powerbi.com/reportEmbed?reportId=822af47a-9462-4980-9e2f-78f3beaf3ab8&autoAuth=true&ctid=a89f5d7e-7b67-4127-868b-15eb3ee8a8dc"
+      allowfullscreen="true"
+      webkitallowfullscreen="true"
+      mozallowfullscreen="true">
+    </iframe>
+  </div>
+  <script>
+    const btn = document.getElementById('fullscreenBtn');
+    const container = document.getElementById('reportContainer');
+
+    btn.addEventListener('click', () => {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.mozRequestFullScreen) { // Firefox
+        container.mozRequestFullScreen();
+      } else if (container.webkitRequestFullscreen) { // Chrome, Safari & Opera
+        container.webkitRequestFullscreen();
+      } else if (container.msRequestFullscreen) { // IE/Edge
+        container.msRequestFullscreen();
+      }
+    });
+  </script>
+</body>
+</html>
