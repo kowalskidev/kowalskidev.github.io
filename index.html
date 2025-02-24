@@ -1,98 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Power BI PWA</title>
-  <!-- Make sure to reference your manifest for PWA installation prompts -->
-  <link rel="manifest" href="manifest.json">
-  <!-- iOS splash screen & icons (optional) -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#FFFFFF" />
-  <style>
-    html, body {
-      margin: 0; 
-      padding: 0; 
-      height: 100%;
-      overflow: hidden; /* remove scrollbars if desired */
-      font-family: sans-serif;
-    }
-    #header {
-      background: #0078D4;
-      color: white;
-      padding: 10px;
-      text-align: center;
-    }
-    #reportContainer {
-      position: relative;
-      width: 100%;
-      height: calc(100% - 50px); /* Adjust for header height */
-    }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    /* Fullscreen button (optional) */
-    #fullscreenBtn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 999;
-      padding: 10px 15px;
-      background: #0078D4;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-      font-size: 14px;
-      opacity: 0.8;
-    }
-    #fullscreenBtn:hover {
-      opacity: 1;
-    }
-  </style>
-</head>
-<body>
-
-  <div id="header">
-    <h1>My Power BI PWA</h1>
-  </div>
-
-  <div id="reportContainer">
-    <button id="fullscreenBtn">Full Screen</button>
-    <iframe 
-      id="reportFrame"
-      src="https://app.powerbi.com/reportEmbed?reportId=YOUR_REPORT_ID_HERE"
-      allowfullscreen="true"
-      webkitallowfullscreen="true"
-      mozallowfullscreen="true">
-    </iframe>
-  </div>
-
-  <script>
-    // Fullscreen handler
-    const btn = document.getElementById('fullscreenBtn');
-    const container = document.getElementById('reportContainer');
-    btn.addEventListener('click', () => {
-      if (container.requestFullscreen) {
-        container.requestFullscreen();
-      } else if (container.mozRequestFullScreen) {
-        container.mozRequestFullScreen();
-      } else if (container.webkitRequestFullscreen) {
-        container.webkitRequestFullscreen();
-      } else if (container.msRequestFullscreen) {
-        container.msRequestFullscreen();
+  <head>
+    <meta charset="UTF-8" />
+    <title>KP NOC</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: sans-serif;
+        overflow: hidden; /* hide scrollbars for a clean look */
       }
-    });
 
-    // Register Service Worker for PWA
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker registered!', reg))
-          .catch(err => console.log('Service Worker registration failed: ', err));
+      /* Full-page video background */
+      #bgVideo {
+        position: fixed;
+        top: 0;
+        left: 0;
+        min-width: 100%;
+        min-height: 100%;
+        object-fit: cover;
+        z-index: -1; /* behind everything else */
+      }
+
+      /* Header bar */
+      #header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 60px;
+        padding: 0 20px;
+        background: rgba(0, 0, 0, 0.6);
+        position: relative;
+        z-index: 10; /* above the video */
+      }
+      #header img {
+        height: 40px; /* adjust for your logo size */
+      }
+      #fullscreenBtn {
+        background: #fff;
+        color: #000;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 16px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      /* The container for our buttons or iframe */
+      #mainContainer {
+        position: absolute;
+        /* top: 30px; below header */
+        left: 0;
+        width: 100%;
+        height: calc(100% - 60px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5; /* above video */
+        flex-direction: column; /* stack elements vertically */
+      }
+
+      /* Title on top */
+      #pageTitle {
+        font-size: 48px;
+        color: #00703c;
+        text-shadow: 0 0 8px #0ff, 0 0 16px #0ff; /* glow effect */
+        margin: 20px 0; /* some spacing above/below */
+        margin-bottom: 2em;
+        text-align: center;
+      }
+
+      /* Container for the 2x2 grid of buttons */
+      #buttonGrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 20px;
+      }
+
+      .menuButton {
+        width: 200px;
+        height: 80px;
+        font-size: 18px;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.6);
+        transition: background 0.3s;
+      }
+      .menuButton:hover {
+        background: rgba(0, 0, 0, 0.8);
+      }
+
+      /* Fullscreen iframe container (hidden by default) */
+      #iframeContainer {
+        display: none; /* revealed when user clicks a dashboard button */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6); /* optional overlay behind the iframe */
+        z-index: 999; /* in front of everything */
+      }
+      #iframeContainer iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      /* "Close / Back" button inside the iframe container */
+      #closeIframeBtn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #fff;
+        color: #000;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Video Background -->
+    <video autoplay muted loop playsinline id="bgVideo">
+      <source src="videobg.mp4" type="video/mp4" />
+      Your browser does not support HTML5 video.
+    </video>
+
+    <!-- Header with Logo (left) and Fullscreen (right) -->
+    <div id="header">
+      <img src="kplogo.jpg" alt="KP Logo" />
+      <button id="fullscreenBtn">Full Screen</button>
+    </div>
+
+    <!-- Main Container: Title on top, then 2x2 grid -->
+    <div id="mainContainer">
+      <img src="kplogo.jpg" alt="KP Logo" width="150 px" height="150 px" />
+      <h1 id="pageTitle">KP Network Operation Center</h1>
+
+      <!-- 2x2 Grid of buttons -->
+      <div id="buttonGrid">
+        <!-- 1st dashboard: open in iframe -->
+        <button
+          class="menuButton"
+          onclick="openDashboard('https://app.powerbi.com/reportEmbed?reportId=822af47a-9462-4980-9e2f-78f3beaf3ab8&autoAuth=true&ctid=a89f5d7e-7b67-4127-868b-15eb3ee8a8dc')"
+        >
+          KP NOC Dashboard
+        </button>
+        <!-- 2nd dashboard: open in iframe -->
+        <button
+          class="menuButton"
+          onclick="openDashboard('https://app.powerbi.com/reportEmbed?reportId=6fa1cb02-e5f7-4301-9474-4f83edc572c9&autoAuth=true&ctid=a89f5d7e-7b67-4127-868b-15eb3ee8a8dc')"
+        >
+          OMS Dashboard
+        </button>
+        <!-- 3rd dashboard: open in iframe -->
+        <button
+          class="menuButton"
+          onclick="openDashboard('https://app.powerbi.com/reportEmbed?reportId=a1bb8528-8755-4102-a189-02f3130d6a59&autoAuth=true&ctid=a89f5d7e-7b67-4127-868b-15eb3ee8a8dc')"
+        >
+          Reports
+        </button>
+        <!-- 4th button: open new tab -->
+        <button
+          class="menuButton"
+          onclick="window.open('https://cloud.prescinto.ai/login','_blank')"
+        >
+          Prescinto CMS
+        </button>
+      </div>
+
+      <!-- Iframe Container (hidden by default) -->
+      <div id="iframeContainer">
+        <!-- Optional "close" button to go back to the grid -->
+        <button id="closeIframeBtn" onclick="closeIframe()">Back</button>
+        <iframe
+          id="reportFrame"
+          src=""
+          allowfullscreen="true"
+          webkitallowfullscreen="true"
+          mozallowfullscreen="true"
+          style="width: 100%; height: 100%; border: none"
+        ></iframe>
+      </div>
+    </div>
+
+    <script>
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+      const buttonGrid = document.getElementById("buttonGrid");
+      const iframeContainer = document.getElementById("iframeContainer");
+      const reportFrame = document.getElementById("reportFrame");
+      const header = document.getElementById("header");
+
+      // 1) Fullscreen logic
+      fullscreenBtn.addEventListener("click", () => {
+        // request fullscreen on the whole document or just the body
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) {
+          document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+          document.documentElement.msRequestFullscreen();
+        }
       });
-    }
-  </script>
-</body>
+
+      // Hide fullscreen button while in fullscreen, show it when out
+      document.addEventListener("fullscreenchange", () => {
+        if (document.fullscreenElement) {
+          fullscreenBtn.style.display = "none";
+        } else {
+          fullscreenBtn.style.display = "inline-block";
+        }
+      });
+
+      // 2) Open a Power BI dashboard in the iframe
+      function openDashboard(url) {
+        // Hide the 2x2 grid
+        buttonGrid.style.display = "none";
+        // Hide the header so it's not visible in fullscreen
+        header.style.display = "none";
+
+        // Show the iframe container
+        iframeContainer.style.display = "block";
+        // Set the iframe src
+        reportFrame.src = url;
+
+        // Request fullscreen on the iframe container
+        if (iframeContainer.requestFullscreen) {
+          iframeContainer.requestFullscreen();
+        } else if (iframeContainer.webkitRequestFullscreen) {
+          iframeContainer.webkitRequestFullscreen();
+        } else if (iframeContainer.mozRequestFullScreen) {
+          iframeContainer.mozRequestFullScreen();
+        } else if (iframeContainer.msRequestFullscreen) {
+          iframeContainer.msRequestFullscreen();
+        }
+      }
+
+      // 3) Close the iframe (Back), show the header again
+      function closeIframe() {
+        // Exit fullscreen if we're in it
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        }
+
+        // Hide the iframe container
+        iframeContainer.style.display = "none";
+        // Clear the iframe src if you want
+        reportFrame.src = "";
+
+        // Show the header and the 2x2 grid again
+        header.style.display = "flex";
+        buttonGrid.style.display = "grid";
+      }
+
+      // Register Service Worker for PWA
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("sw.js")
+            .then((reg) => console.log("Service Worker registered!", reg))
+            .catch((err) =>
+              console.log("Service Worker registration failed: ", err)
+            );
+        });
+      }
+    </script>
+  </body>
 </html>

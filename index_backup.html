@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>KP NOC</title>
+    <!-- Make sure to reference your manifest for PWA installation prompts -->
+    <link rel="manifest" href="manifest.json" />
+    <!-- iOS splash screen & icons (optional) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      /* Header bar */
+      #header {
+        height: 50px;
+        background: #0078d4; /* Example color */
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        color: #fff;
+      }
+
+      /* Fullscreen button */
+      #fullscreenBtn {
+        margin-left: auto; /* push button to the right */
+        cursor: pointer;
+        background: #fff;
+        color: #0078d4;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+
+      /* Container for the Power BI iframe */
+      #reportContainer {
+        width: 100%;
+        height: calc(100% - 50px); /* fill remaining space below header */
+        position: relative;
+      }
+
+      /* The iframe itself */
+      #reportFrame {
+        width: 100%;
+        height: 100%;
+        border: none;
+        /* If you want scrolling inside the iframe, you can do: scrolling="yes" (HTML attribute) */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header">
+      <h1>KP NOC</h1>
+      <button id="fullscreenBtn">Full Screen</button>
+    </div>
+
+    <div id="reportContainer">
+      <iframe
+        id="reportFrame"
+        src="https://app.powerbi.com/reportEmbed?reportId=822af47a-9462-4980-9e2f-78f3beaf3ab8&autoAuth=true&ctid=a89f5d7e-7b67-4127-868b-15eb3ee8a8dc"
+        allowfullscreen="true"
+        webkitallowfullscreen="true"
+        mozallowfullscreen="true"
+      >
+      </iframe>
+    </div>
+
+    <script>
+      // Fullscreen handler
+      const fsBtn = document.getElementById("fullscreenBtn");
+      const reportContainer = document.getElementById("reportContainer");
+
+      // When user clicks the "Full Screen" button
+      fsBtn.addEventListener("click", () => {
+        // You can request full screen on the entire <html> or a specific container
+        if (reportContainer.requestFullscreen) {
+          reportContainer.requestFullscreen();
+        } else if (reportContainer.webkitRequestFullscreen) {
+          // Safari
+          reportContainer.webkitRequestFullscreen();
+        } else if (reportContainer.mozRequestFullScreen) {
+          // Older Firefox
+          reportContainer.mozRequestFullScreen();
+        } else if (reportContainer.msRequestFullscreen) {
+          // IE/Edge
+          reportContainer.msRequestFullscreen();
+        }
+      });
+
+      // Listen for when full screen mode changes
+      document.addEventListener("fullscreenchange", () => {
+        if (document.fullscreenElement) {
+          // In full screen -> hide the button
+          fsBtn.style.display = "none";
+        } else {
+          // Exited full screen -> show the button again
+          fsBtn.style.display = "inline-block";
+        }
+      });
+
+      // Register Service Worker for PWA
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("sw.js")
+            .then((reg) => console.log("Service Worker registered!", reg))
+            .catch((err) =>
+              console.log("Service Worker registration failed: ", err)
+            );
+        });
+      }
+    </script>
+  </body>
+</html>
